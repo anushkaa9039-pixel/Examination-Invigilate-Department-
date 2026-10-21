@@ -1,0 +1,6 @@
+{
+  "name": "EID — Examination Invigilation Department",
+  "description": "Simple online exam conducting and invigilation platform for teachers and students.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

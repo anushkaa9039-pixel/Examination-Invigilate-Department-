@@ -1,0 +1,127 @@
+@import "tailwindcss";
+
+@theme {
+  --font-serif: "Instrument Serif", Georgia, serif;
+  --font-sans: "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
+  --color-warm-ivory: #F8F4EC;
+  --color-mocha-cream: #E8DCC6;
+  --color-cosmic-latte: #B7A89A;
+  --color-deep-burgundy: #722F37;
+  --color-dark-espresso: #30231F;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: #F8F4EC;
+  color: #30231F;
+  min-height: 100vh;
+}
+
+/* Subtle Architectural Grid Pattern */
+.bg-grid-eid {
+  background-size: 40px 40px;
+  background-image: 
+    linear-gradient(to right, rgba(183, 168, 154, 0.12) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(183, 168, 154, 0.12) 1px, transparent 1px);
+}
+
+/* Custom scrollbars for clean exam view */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #F8F4EC;
+}
+::-webkit-scrollbar-thumb {
+  background: #B7A89A;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #722F37;
+}
+
+/* Subtle Airflow Animation Keyframes */
+@keyframes airflow-drift-1 {
+  0% {
+    transform: translate3d(-6%, 0, 0) scaleY(1);
+  }
+  50% {
+    transform: translate3d(4%, -10px, 0) scaleY(1.05);
+  }
+  100% {
+    transform: translate3d(-6%, 0, 0) scaleY(1);
+  }
+}
+
+@keyframes airflow-drift-2 {
+  0% {
+    transform: translate3d(4%, 0, 0) scaleY(1.03);
+  }
+  50% {
+    transform: translate3d(-5%, 12px, 0) scaleY(0.96);
+  }
+  100% {
+    transform: translate3d(4%, 0, 0) scaleY(1.03);
+  }
+}
+
+@keyframes airflow-drift-3 {
+  0% {
+    transform: translate3d(-5%, 0, 0) scaleY(0.97);
+  }
+  50% {
+    transform: translate3d(6%, -8px, 0) scaleY(1.04);
+  }
+  100% {
+    transform: translate3d(-5%, 0, 0) scaleY(0.97);
+  }
+}
+
+@keyframes airflow-exam {
+  0% {
+    transform: translate3d(-3%, 0, 0);
+  }
+  50% {
+    transform: translate3d(3%, -4px, 0);
+  }
+  100% {
+    transform: translate3d(-3%, 0, 0);
+  }
+}
+
+.airflow-flow-1 {
+  animation: airflow-drift-1 22s ease-in-out infinite;
+  will-change: transform;
+}
+
+.airflow-flow-2 {
+  animation: airflow-drift-2 28s ease-in-out infinite;
+  will-change: transform;
+}
+
+.airflow-flow-3 {
+  animation: airflow-drift-3 25s ease-in-out infinite;
+  will-change: transform;
+}
+
+.airflow-flow-exam-1 {
+  animation: airflow-exam 42s ease-in-out infinite;
+  will-change: transform;
+}
+
+.airflow-flow-exam-2 {
+  animation: airflow-exam 48s ease-in-out infinite reverse;
+  will-change: transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .airflow-flow-1,
+  .airflow-flow-2,
+  .airflow-flow-3,
+  .airflow-flow-exam-1,
+  .airflow-flow-exam-2 {
+    animation: none !important;
+    transform: none !important;
+  }
+}

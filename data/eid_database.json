@@ -1,0 +1,279 @@
+{
+  "exams": [
+    {
+      "id": "EID-9067",
+      "teacherName": "Divyanshu",
+      "title": "DBMS",
+      "subject": "DBMS",
+      "topics": "NORMALIZATION",
+      "instructions": "Good Luck !",
+      "duration": 15,
+      "totalMarks": 2,
+      "passingMarks": 24,
+      "paperStyle": "Standard",
+      "status": "Open",
+      "createdAt": "2026-10-12T08:43:02.570Z",
+      "publishedAt": "2026-10-12T08:43:02.570Z",
+      "resultsPublished": true,
+      "resultsPublishedAt": "2026-10-16T17:48:25.171Z"
+    }
+  ],
+  "questions": [
+    {
+      "id": "q_man_1791794352389_nxre",
+      "examId": "EID-9067",
+      "order": 1,
+      "type": "multiple_choice",
+      "text": "full form of dbms?",
+      "options": [
+        "database",
+        "database management",
+        "data",
+        "database management system"
+      ],
+      "correctAnswer": "database management",
+      "marks": 1,
+      "explanation": "",
+      "rubric": "",
+      "source": "manual"
+    },
+    {
+      "id": "q_man_1791794353886_wg1n",
+      "examId": "EID-9067",
+      "order": 2,
+      "type": "true_false",
+      "text": "are you enjoying this ?",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correctAnswer": "True",
+      "marks": 1,
+      "explanation": "",
+      "rubric": "",
+      "source": "manual"
+    }
+  ],
+  "attempts": [
+    {
+      "id": "att_1791799756448_atizf",
+      "examId": "EID-9067",
+      "studentName": "Anushka Kumari Pandey",
+      "accessCode": "WMHCGT",
+      "startTime": "2026-10-12T10:09:16.448Z",
+      "lastActivity": "2026-10-12T10:09:31.726Z",
+      "status": "Submitted",
+      "submittedAt": "2026-10-12T10:09:31.727Z",
+      "totalScoreAwarded": 2,
+      "verificationStatus": "Teacher-Verified",
+      "verifiedBy": "Divyanshu",
+      "verifiedAt": "2026-10-13T09:51:40.559Z"
+    },
+    {
+      "id": "att_1791799795853_ekw48",
+      "examId": "EID-9067",
+      "studentName": "Andiv",
+      "accessCode": "7HSJGL",
+      "startTime": "2026-10-12T10:09:55.853Z",
+      "lastActivity": "2026-10-12T10:16:29.712Z",
+      "status": "Submitted",
+      "submittedAt": "2026-10-12T10:16:29.713Z",
+      "totalScoreAwarded": 0,
+      "verificationStatus": "Teacher-Verified"
+    },
+    {
+      "id": "att_1791800580575_cirec",
+      "examId": "EID-9067",
+      "studentName": "Anu",
+      "accessCode": "GR6MQH",
+      "startTime": "2026-10-12T10:23:00.575Z",
+      "lastActivity": "2026-10-12T10:23:42.638Z",
+      "status": "Submitted",
+      "submittedAt": "2026-10-12T10:23:42.639Z",
+      "totalScoreAwarded": 2,
+      "autoScore": 0,
+      "verificationStatus": "Teacher-Verified",
+      "verifiedBy": "Divyanshu",
+      "verifiedAt": "2026-10-13T09:37:05.218Z"
+    }
+  ],
+  "answers": [
+    {
+      "id": "ans_1791799763656_2q2zb",
+      "attemptId": "att_1791799756448_atizf",
+      "questionId": "q_man_1791794352389_nxre",
+      "response": "database management system",
+      "marksAwarded": 1,
+      "feedback": "Incorrect choice",
+      "isTeacherMarked": true
+    },
+    {
+      "id": "ans_1791799767822_qu16q",
+      "attemptId": "att_1791799756448_atizf",
+      "questionId": "q_man_1791794353886_wg1n",
+      "response": "True",
+      "marksAwarded": 1,
+      "feedback": "Correct answer (Objective key matched)",
+      "isTeacherMarked": true
+    },
+    {
+      "id": "ans_1791800182309_ye1vd",
+      "attemptId": "att_1791799795853_ekw48",
+      "questionId": "q_man_1791794352389_nxre",
+      "response": "database",
+      "marksAwarded": 0,
+      "feedback": "Incorrect choice",
+      "isTeacherMarked": true
+    },
+    {
+      "id": "ans_1791800187694_39m20",
+      "attemptId": "att_1791799795853_ekw48",
+      "questionId": "q_man_1791794353886_wg1n",
+      "response": "False",
+      "marksAwarded": 0,
+      "feedback": "Incorrect choice",
+      "isTeacherMarked": true
+    },
+    {
+      "id": "ans_1791800608239_0t89v",
+      "attemptId": "att_1791800580575_cirec",
+      "questionId": "q_man_1791794352389_nxre",
+      "response": "database management system",
+      "marksAwarded": 2,
+      "feedback": "Teacher awarded full marks: correct expanded form",
+      "autoMarksAwarded": 0,
+      "autoFeedback": "Incorrect choice (Model key: database management)",
+      "isTeacherMarked": true
+    },
+    {
+      "id": "ans_1791800610552_bre93",
+      "attemptId": "att_1791800580575_cirec",
+      "questionId": "q_man_1791794353886_wg1n",
+      "response": "False",
+      "marksAwarded": 0,
+      "feedback": "Incorrect choice",
+      "autoMarksAwarded": 0,
+      "autoFeedback": "Incorrect choice (Model key: True)"
+    }
+  ],
+  "activityEvents": [
+    {
+      "id": "ev_1791799756449_start",
+      "attemptId": "att_1791799756448_atizf",
+      "eventType": "exam_started",
+      "timestamp": "2026-10-12T10:09:16.449Z",
+      "metadata": {
+        "studentName": "Anushka Kumari Pandey"
+      }
+    },
+    {
+      "id": "ev_1791799771727_submit",
+      "attemptId": "att_1791799756448_atizf",
+      "eventType": "exam_submitted",
+      "timestamp": "2026-10-12T10:09:31.727Z"
+    },
+    {
+      "id": "ev_1791799795854_start",
+      "attemptId": "att_1791799795853_ekw48",
+      "eventType": "exam_started",
+      "timestamp": "2026-10-12T10:09:55.854Z",
+      "metadata": {
+        "studentName": "Andiv"
+      }
+    },
+    {
+      "id": "ev_1791799800422_motr",
+      "attemptId": "att_1791799795853_ekw48",
+      "eventType": "context_menu",
+      "timestamp": "2026-10-12T10:10:00.422Z",
+      "metadata": {}
+    },
+    {
+      "id": "ev_1791799804814_qfm1",
+      "attemptId": "att_1791799795853_ekw48",
+      "eventType": "context_menu",
+      "timestamp": "2026-10-12T10:10:04.814Z",
+      "metadata": {}
+    },
+    {
+      "id": "ev_1791800182534_ft69",
+      "attemptId": "att_1791799795853_ekw48",
+      "eventType": "context_menu",
+      "timestamp": "2026-10-12T10:16:22.534Z",
+      "metadata": {}
+    },
+    {
+      "id": "ev_1791800184189_439o",
+      "attemptId": "att_1791799795853_ekw48",
+      "eventType": "context_menu",
+      "timestamp": "2026-10-12T10:16:24.189Z",
+      "metadata": {}
+    },
+    {
+      "id": "ev_1791800189713_submit",
+      "attemptId": "att_1791799795853_ekw48",
+      "eventType": "exam_submitted",
+      "timestamp": "2026-10-12T10:16:29.713Z"
+    },
+    {
+      "id": "ev_1791800580576_start",
+      "attemptId": "att_1791800580575_cirec",
+      "eventType": "exam_started",
+      "timestamp": "2026-10-12T10:23:00.576Z",
+      "metadata": {
+        "studentName": "Anu"
+      }
+    },
+    {
+      "id": "ev_1791800584371_i0sx",
+      "attemptId": "att_1791800580575_cirec",
+      "eventType": "context_menu",
+      "timestamp": "2026-10-12T10:23:04.371Z",
+      "metadata": {}
+    },
+    {
+      "id": "ev_1791800622639_submit",
+      "attemptId": "att_1791800580575_cirec",
+      "eventType": "exam_submitted",
+      "timestamp": "2026-10-12T10:23:42.639Z"
+    }
+  ],
+  "jevReviews": [
+    {
+      "id": "jev_1791799771728_6kuq",
+      "attemptId": "att_1791799756448_atizf",
+      "riskLevel": "Low Risk",
+      "reasons": [
+        "Low Risk: Normal exam activity. Continuous single-window focus maintained on exam paper."
+      ],
+      "status": "Pending",
+      "teacherNotes": "",
+      "reviewedAt": "2026-10-12T10:09:31.728Z"
+    },
+    {
+      "id": "jev_1791799800422_8eus",
+      "attemptId": "att_1791799795853_ekw48",
+      "riskLevel": "Medium Risk",
+      "reasons": [
+        "Medium Risk: A few unusual activities detected.",
+        "Secondary context menu / right click attempted (4 times)."
+      ],
+      "status": "Pending",
+      "teacherNotes": "",
+      "reviewedAt": "2026-10-12T10:10:00.422Z"
+    },
+    {
+      "id": "jev_1791800584372_9nmy",
+      "attemptId": "att_1791800580575_cirec",
+      "riskLevel": "Medium Risk",
+      "reasons": [
+        "Medium Risk: A few unusual activities detected.",
+        "Secondary context menu / right click attempted (1 time)."
+      ],
+      "status": "Pending",
+      "teacherNotes": "Verified by teacher",
+      "reviewedAt": "2026-10-12T10:23:04.372Z"
+    }
+  ],
+  "cautions": []
+}
