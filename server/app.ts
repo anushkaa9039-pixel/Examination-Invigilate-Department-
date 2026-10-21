@@ -13,7 +13,7 @@ app.use('/api', async (req: Request, res: Response, next) => {
   if (db.isMisconfigured && req.path !== '/status') {
     return res.status(503).json({
       error:
-        'Database is not connected. The site admin must add Upstash Redis (Vercel > Storage) to this project and redeploy. Without it exams, names and results cannot be shared between users.',
+        'Database is not connected. In Vercel: Storage > Create Database > Upstash Redis > connect it to this project (all environments), then Redeploy. Or add UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN under Settings > Environment Variables and redeploy.',
     });
   }
   await db.load();

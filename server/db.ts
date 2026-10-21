@@ -113,8 +113,21 @@ const DB_DIR = IS_VERCEL ? '/tmp' : path.resolve(process.cwd(), 'data');
 const DB_FILE = path.join(DB_DIR, 'eid_database.json');
 
 // Optional durable storage (Upstash Redis REST API / Vercel KV). Required for real persistence on Vercel.
-const REDIS_URL = (process.env.UPSTASH_REDIS_REST_URL || process.env.KV_REST_API_URL || '').replace(/\/+$/, '');
-const REDIS_TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN || process.env.KV_REST_API_TOKEN || '';
+// Find the Redis REST credentials. Vercel's Upstash/KV integration may use different names (and a custom
+// prefix such as STORAGE_KV_REST_API_URL), so we look for any matching variable.
+function findEnv(patterns: RegExp[], exclude?: RegExp): string {
+  for (const re of patterns) {
+    for (const [name, value] of Object.entries(process.env)) {
+      if (value && re.test(name) && !(exclude && exclude.test(name))) return value.trim();
+    }
+  }
+  return '';
+}
+const REDIS_URL = findEnv([/^UPSTASH_REDIS_REST_URL$/, /^KV_REST_API_URL$/, /KV_REST_API_URL$/, /REDIS_REST_URL$/, /REST_API_URL$/]).replace(/\/+$/, '');
+const REDIS_TOKEN = findEnv(
+  [/^UPSTASH_REDIS_REST_TOKEN$/, /^KV_REST_API_TOKEN$/, /KV_REST_API_TOKEN$/, /REDIS_REST_TOKEN$/, /REST_API_TOKEN$/],
+  /READ_ONLY/i
+);
 const USE_REMOTE = Boolean(REDIS_URL && REDIS_TOKEN);
 
 const COLLECTIONS = ['exams', 'questions', 'attempts', 'answers', 'activityEvents', 'jevReviews', 'cautions'] as const;
