@@ -106,8 +106,31 @@ interface DatabaseSchema {
   cautions?: CautionNotice[];
 }
 
-const DB_DIR = path.resolve(process.cwd(), 'data');
+const IS_VERCEL = Boolean(process.env.VERCEL);
+const SEED_FILE = path.resolve(process.cwd(), 'data', 'eid_database.json');
+// On Vercel the project directory is read-only; /tmp is the only writable (but non-persistent) location.
+const DB_DIR = IS_VERCEL ? '/tmp' : path.resolve(process.cwd(), 'data');
 const DB_FILE = path.join(DB_DIR, 'eid_database.json');
+
+// Optional durable storage (Upstash Redis REST API / Vercel KV). Required for real persistence on Vercel.
+const REDIS_URL = (process.env.UPSTASH_REDIS_REST_URL || process.env.KV_REST_API_URL || '').replace(/\/+$/, '');
+const REDIS_TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN || process.env.KV_REST_API_TOKEN || '';
+const REDIS_KEY = 'eid_database_v1';
+const USE_REMOTE = Boolean(REDIS_URL && REDIS_TOKEN);
+
+async function redisCommand(command: string[]): Promise<any> {
+  const res = await fetch(REDIS_URL, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${REDIS_TOKEN}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(command),
+  });
+  if (!res.ok) {
+    throw new Error(`Redis request failed (${res.status})`);
+  }
+  const json: any = await res.json();
+  if (json.error) throw new Error(json.error);
+  return json.result;
+}
 
 class Database {
   private data: DatabaseSchema = {
@@ -124,53 +147,94 @@ class Database {
     this.init();
   }
 
+  private dirty = false;
+
   private init() {
     try {
       if (!fs.existsSync(DB_DIR)) {
         fs.mkdirSync(DB_DIR, { recursive: true });
       }
-      if (fs.existsSync(DB_FILE)) {
-        const raw = fs.readFileSync(DB_FILE, 'utf-8');
-        this.data = JSON.parse(raw);
-        // Ensure all arrays exist
-        this.data.exams = this.data.exams || [];
-        this.data.questions = this.data.questions || [];
-        this.data.attempts = this.data.attempts || [];
-        this.data.answers = this.data.answers || [];
-        this.data.activityEvents = this.data.activityEvents || [];
-        this.data.jevReviews = this.data.jevReviews || [];
-        this.data.cautions = this.data.cautions || [];
-
-        // Purge legacy fake seed/demo data & abandoned test placeholders
-        const fakeNames = new Set(['arthur dent', 'alice walker', 'student', 'student test', 'test student verification']);
-        const fakeExamIds = new Set(['eid-8764']);
-        const removedAttemptIds = new Set<string>();
-
-        this.data.attempts = this.data.attempts.filter((a) => {
-          if (fakeNames.has(a.studentName.trim().toLowerCase()) || fakeExamIds.has(a.examId.toLowerCase())) {
-            removedAttemptIds.add(a.id);
-            return false;
-          }
-          return true;
-        });
-
-        this.data.exams = this.data.exams.filter((e) => !fakeExamIds.has(e.id.toLowerCase()));
-        this.data.questions = this.data.questions.filter((q) => !fakeExamIds.has(q.examId.toLowerCase()));
-        this.data.answers = this.data.answers.filter((ans) => !removedAttemptIds.has(ans.attemptId));
-        this.data.activityEvents = this.data.activityEvents.filter((ev) => !removedAttemptIds.has(ev.attemptId));
-        this.data.jevReviews = this.data.jevReviews.filter((r) => !removedAttemptIds.has(r.attemptId));
-        this.data.cautions = this.data.cautions.filter((c) => !removedAttemptIds.has(c.attemptId));
-
-        this.persist();
-      } else {
-        this.persist();
+      const source = fs.existsSync(DB_FILE) ? DB_FILE : fs.existsSync(SEED_FILE) ? SEED_FILE : null;
+      if (source) {
+        this.normalize(JSON.parse(fs.readFileSync(source, 'utf-8')));
       }
+      if (!USE_REMOTE) this.persist();
     } catch (err) {
       console.error('Error initializing database file:', err);
     }
   }
 
+  private normalize(parsed: any) {
+    this.data = parsed || {};
+    // Ensure all arrays exist
+    this.data.exams = this.data.exams || [];
+    this.data.questions = this.data.questions || [];
+    this.data.attempts = this.data.attempts || [];
+    this.data.answers = this.data.answers || [];
+    this.data.activityEvents = this.data.activityEvents || [];
+    this.data.jevReviews = this.data.jevReviews || [];
+    this.data.cautions = this.data.cautions || [];
+
+    // Purge legacy fake seed/demo data & abandoned test placeholders
+    const fakeNames = new Set(['arthur dent', 'alice walker', 'student', 'student test', 'test student verification']);
+    const fakeExamIds = new Set(['eid-8764']);
+    const removedAttemptIds = new Set<string>();
+
+    this.data.attempts = this.data.attempts.filter((a) => {
+      if (fakeNames.has(a.studentName.trim().toLowerCase()) || fakeExamIds.has(a.examId.toLowerCase())) {
+        removedAttemptIds.add(a.id);
+        return false;
+      }
+      return true;
+    });
+
+    this.data.exams = this.data.exams.filter((e) => !fakeExamIds.has(e.id.toLowerCase()));
+    this.data.questions = this.data.questions.filter((q) => !fakeExamIds.has(q.examId.toLowerCase()));
+    this.data.answers = this.data.answers.filter((ans) => !removedAttemptIds.has(ans.attemptId));
+    this.data.activityEvents = this.data.activityEvents.filter((ev) => !removedAttemptIds.has(ev.attemptId));
+    this.data.jevReviews = this.data.jevReviews.filter((r) => !removedAttemptIds.has(r.attemptId));
+    this.data.cautions = this.data.cautions.filter((c) => !removedAttemptIds.has(c.attemptId));
+  }
+
+  /** True when data is stored in durable remote storage. */
+  get isDurable(): boolean {
+    return USE_REMOTE;
+  }
+
+  /** Refresh in-memory state from durable storage (call at the start of every serverless request). */
+  async load(): Promise<void> {
+    if (!USE_REMOTE) return;
+    try {
+      const raw = await redisCommand(['GET', REDIS_KEY]);
+      if (raw) {
+        this.normalize(JSON.parse(raw));
+        this.dirty = false;
+      } else {
+        // First run: seed remote storage with the bundled data
+        this.dirty = true;
+        await this.flush();
+      }
+    } catch (err) {
+      console.error('Error loading database from remote storage:', err);
+    }
+  }
+
+  /** Write pending changes to durable storage (call before a serverless response is sent). */
+  async flush(): Promise<void> {
+    if (!USE_REMOTE || !this.dirty) return;
+    try {
+      await redisCommand(['SET', REDIS_KEY, JSON.stringify(this.data)]);
+      this.dirty = false;
+    } catch (err) {
+      console.error('Error saving database to remote storage:', err);
+    }
+  }
+
   private persist() {
+    if (USE_REMOTE) {
+      this.dirty = true;
+      return;
+    }
     try {
       const tempPath = `${DB_FILE}.tmp`;
       fs.writeFileSync(tempPath, JSON.stringify(this.data, null, 2), 'utf-8');

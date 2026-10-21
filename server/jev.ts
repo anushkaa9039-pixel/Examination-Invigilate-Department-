@@ -1,4 +1,4 @@
-import { ActivityEvent, JEVReview, db } from './db';
+import { ActivityEvent, JEVReview, db } from './db.js';
 
 export function analyzeAttemptActivity(attemptId: string): JEVReview {
   const events = db.getActivityEventsByAttemptId(attemptId);
