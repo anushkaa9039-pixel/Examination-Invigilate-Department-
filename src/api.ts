@@ -290,6 +290,7 @@ export const api = {
     const res = await fetch(`/api/attempts/${encodeURIComponent(attemptId)}/activity`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
+      keepalive: true,
       body: JSON.stringify({ eventType, metadata }),
     });
     return parseResponse<{ success: boolean; reviewRiskLevel: string }>(res, 'Failed to record activity');

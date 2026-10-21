@@ -10,6 +10,12 @@ app.use(express.json({ limit: '10mb' }));
 // Durable storage for serverless deployments (e.g. Vercel): load fresh state before each API call
 // and make sure any changes are saved before the response is sent.
 app.use('/api', async (req: Request, res: Response, next) => {
+  if (db.isMisconfigured && req.path !== '/status') {
+    return res.status(503).json({
+      error:
+        'Database is not connected. The site admin must add Upstash Redis (Vercel > Storage) to this project and redeploy. Without it exams, names and results cannot be shared between users.',
+    });
+  }
   await db.load();
   const originalEnd = res.end.bind(res) as any;
   (res as any).end = (...args: any[]) => {
@@ -35,6 +41,7 @@ import { synthesizeQuestions } from './questionSynthesizer.js';
 app.get('/api/status', (req: Request, res: Response) => {
   res.json({
     aiAvailable: true,
+    storage: db.isDurable ? 'durable' : db.isMisconfigured ? 'missing' : 'local-file',
     timestamp: new Date().toISOString(),
   });
 });
@@ -1380,6 +1387,31 @@ app.post('/api/attempts/:attemptId/activity', (req: Request, res: Response) => {
 
   db.addActivityEvent(event);
   const review = analyzeAttemptActivity(attemptId);
+
+  // JEV enforcement: once activity reaches High Risk, automatically issue a caution to the student
+  // (at most once per 60 seconds, and only while the attempt is still active).
+  if (attempt.status === 'Active' && review.riskLevel === 'High Risk' && eventType !== 'teacher_caution') {
+    const existing = db.getCautionsByAttemptId(attemptId);
+    const lastAuto = [...existing].reverse().find((c) => c.sentBy === 'JEV Auto-Invigilator');
+    const recentlySent = lastAuto && Date.now() - new Date(lastAuto.sentAt).getTime() < 60000;
+    const hasPending = existing.some((c) => !c.acknowledged);
+    if (!recentlySent && !hasPending) {
+      db.addCaution({
+        id: `caut_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+        attemptId: attempt.id,
+        examId: attempt.examId,
+        studentName: attempt.studentName,
+        message:
+          'Caution: Unusual activity has been detected during your exam (' +
+          (review.reasons[1] || 'repeated violations') +
+          '). Please stay on the exam page and follow the exam rules. If unusual activity continues, negative marks may be given or your exam may be cancelled.',
+        sentAt: new Date().toISOString(),
+        sentBy: 'JEV Auto-Invigilator',
+        acknowledged: false,
+        acknowledgedAt: null,
+      });
+    }
+  }
   const activeCaution = db.getActiveCautionByAttemptId(attemptId) || null;
 
   res.json({ success: true, event, reviewRiskLevel: review.riskLevel, activeCaution });

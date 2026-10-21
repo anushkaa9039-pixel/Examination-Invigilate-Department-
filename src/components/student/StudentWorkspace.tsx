@@ -381,7 +381,8 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({
       }
     };
 
-    window.addEventListener('visibilitychange', handleVisibilityChange);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('pagehide', handleWindowBlur);
     window.addEventListener('blur', handleWindowBlur);
     window.addEventListener('focus', handleWindowFocus);
     document.addEventListener('fullscreenchange', handleFullscreenChange);
@@ -394,7 +395,8 @@ export const StudentWorkspace: React.FC<StudentWorkspaceProps> = ({
     window.addEventListener('beforeunload', handleBeforeUnload);
 
     return () => {
-      window.removeEventListener('visibilitychange', handleVisibilityChange);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('pagehide', handleWindowBlur);
       window.removeEventListener('blur', handleWindowBlur);
       window.removeEventListener('focus', handleWindowFocus);
       document.removeEventListener('fullscreenchange', handleFullscreenChange);

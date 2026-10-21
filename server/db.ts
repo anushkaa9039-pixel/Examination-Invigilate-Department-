@@ -115,21 +115,27 @@ const DB_FILE = path.join(DB_DIR, 'eid_database.json');
 // Optional durable storage (Upstash Redis REST API / Vercel KV). Required for real persistence on Vercel.
 const REDIS_URL = (process.env.UPSTASH_REDIS_REST_URL || process.env.KV_REST_API_URL || '').replace(/\/+$/, '');
 const REDIS_TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN || process.env.KV_REST_API_TOKEN || '';
-const REDIS_KEY = 'eid_database_v1';
 const USE_REMOTE = Boolean(REDIS_URL && REDIS_TOKEN);
 
-async function redisCommand(command: string[]): Promise<any> {
-  const res = await fetch(REDIS_URL, {
+const COLLECTIONS = ['exams', 'questions', 'attempts', 'answers', 'activityEvents', 'jevReviews', 'cautions'] as const;
+type CollectionName = (typeof COLLECTIONS)[number];
+const redisKey = (c: string) => `eid:v2:${c}`;
+
+async function redisPipeline(commands: string[][]): Promise<any[]> {
+  if (commands.length === 0) return [];
+  const res = await fetch(`${REDIS_URL}/pipeline`, {
     method: 'POST',
     headers: { Authorization: `Bearer ${REDIS_TOKEN}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify(command),
+    body: JSON.stringify(commands),
   });
   if (!res.ok) {
     throw new Error(`Redis request failed (${res.status})`);
   }
-  const json: any = await res.json();
-  if (json.error) throw new Error(json.error);
-  return json.result;
+  const json: any[] = await res.json();
+  for (const item of json) {
+    if (item && item.error) throw new Error(item.error);
+  }
+  return json.map((item) => item?.result);
 }
 
 class Database {
@@ -201,30 +207,97 @@ class Database {
     return USE_REMOTE;
   }
 
+  /** True when running on Vercel without durable storage configured (data would be lost). */
+  get isMisconfigured(): boolean {
+    return IS_VERCEL && !USE_REMOTE;
+  }
+
+  // Snapshot of what is stored remotely, used to write only the records that changed (record-level
+  // writes mean two students using the app at the same moment never overwrite each other).
+  private snapshot: Record<string, Map<string, string>> = {};
+
   /** Refresh in-memory state from durable storage (call at the start of every serverless request). */
   async load(): Promise<void> {
     if (!USE_REMOTE) return;
     try {
-      const raw = await redisCommand(['GET', REDIS_KEY]);
-      if (raw) {
-        this.normalize(JSON.parse(raw));
-        this.dirty = false;
-      } else {
+      const results = await redisPipeline(COLLECTIONS.map((c) => ['HGETALL', redisKey(c)]));
+      const raw: any = {};
+      const snap: Record<string, Map<string, string>> = {};
+      let hasAny = false;
+
+      COLLECTIONS.forEach((c, i) => {
+        const flat: string[] = Array.isArray(results[i]) ? results[i] : [];
+        const map = new Map<string, string>();
+        const items: any[] = [];
+        for (let k = 0; k + 1 < flat.length; k += 2) {
+          map.set(flat[k], flat[k + 1]);
+          try {
+            items.push(JSON.parse(flat[k + 1]));
+          } catch {
+            /* skip corrupt record */
+          }
+        }
+        if (map.size > 0) hasAny = true;
+        raw[c] = items;
+        snap[c] = map;
+      });
+
+      if (!hasAny) {
         // First run: seed remote storage with the bundled data
+        let seed: any = {};
+        try {
+          if (fs.existsSync(SEED_FILE)) seed = JSON.parse(fs.readFileSync(SEED_FILE, 'utf-8'));
+        } catch {
+          seed = {};
+        }
+        this.snapshot = {};
+        this.normalize(seed);
         this.dirty = true;
         await this.flush();
+        return;
       }
+
+      this.snapshot = snap;
+      this.normalize(raw);
+      // Anything removed by normalize() (legacy demo data) gets deleted remotely on the next flush
+      this.dirty = true;
     } catch (err) {
       console.error('Error loading database from remote storage:', err);
     }
   }
 
-  /** Write pending changes to durable storage (call before a serverless response is sent). */
+  /** Write only changed records to durable storage (call before a serverless response is sent). */
   async flush(): Promise<void> {
     if (!USE_REMOTE || !this.dirty) return;
+    this.dirty = false;
+
+    // Compute the diff synchronously so concurrent requests cannot interleave with it.
+    const commands: string[][] = [];
+    for (const c of COLLECTIONS) {
+      const key = redisKey(c);
+      const previous = this.snapshot[c] || new Map<string, string>();
+      const next = new Map<string, string>();
+      const items: any[] = ((this.data as any)[c] as any[]) || [];
+
+      for (const item of items) {
+        if (!item || !item.id) continue;
+        const json = JSON.stringify(item);
+        next.set(item.id, json);
+        if (previous.get(item.id) !== json) {
+          commands.push(['HSET', key, item.id, json]);
+        }
+      }
+      for (const id of previous.keys()) {
+        if (!next.has(id)) commands.push(['HDEL', key, id]);
+      }
+      this.snapshot[c] = next;
+    }
+
+    if (commands.length === 0) return;
     try {
-      await redisCommand(['SET', REDIS_KEY, JSON.stringify(this.data)]);
-      this.dirty = false;
+      for (let i = 0; i < commands.length; i += 200) {
+        await redisPipeline(commands.slice(i, i + 200));
+      }
     } catch (err) {
       console.error('Error saving database to remote storage:', err);
     }
